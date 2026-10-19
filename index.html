@@ -71,27 +71,27 @@
         .square { width: 100px; height: 100px; background: #fff; border: 2px solid #142238; font-size: 50px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #142238;}
         .square:hover { background: #f0f0f0; }
         
-        /* Splash Screen */
         .splash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #142238; color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; transition: opacity 1s; }
-        .splash h1 { font-size: 50px; color: #e8bb76; margin-bottom: 10px;}
-        .splash p { font-size: 20px; }
+        .splash h1 { font-size: 70px; color: #e8bb76; margin-bottom: 20px; text-shadow: 0 0 10px rgba(232, 187, 118, 0.5);}
+        .splash p { font-size: 24px; font-weight: bold; }
         
-        /* Memory Game */
         .memory-grid { display: grid; grid-template-columns: repeat(4, 70px); gap: 10px; justify-content: center; margin-top: 20px;}
         .memory-card { width: 70px; height: 70px; background: #142238; color: white; font-size: 30px; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; }
         .memory-card.flipped { background: #e8bb76; color: #142238; }
+        
+        .tasbih-btn { width: 150px; height: 150px; border-radius: 50%; background: #e8bb76; color: #142238; font-size: 40px; font-weight: bold; border: 5px solid #142238; margin: 20px auto; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); user-select: none;}
+        .tasbih-btn:active { transform: scale(0.95); }
         `;
 
-        // مكون شاشة الترحيب
         function SplashScreen({ onFinish }) {
           useEffect(() => {
-            const timer = setTimeout(onFinish, 3000);
+            const timer = setTimeout(onFinish, 5000); // 5 ثواني عشان تتأكد إنك شوفتها
             return () => clearTimeout(timer);
           }, [onFinish]);
           return (
             <div className="splash">
               <h1>بودي ✂️</h1>
-              <p>أهلاً بيك.. نتشرف بحضورك!</p>
+              <p>أهلاً بعملاء بودي.. نتشرف بحضوركم!</p>
             </div>
           );
         }
@@ -111,18 +111,17 @@
           const [toastMessage, setToastMessage] = useState(null);
           const [audioEnabled, setAudioEnabled] = useState(false);
           
-          // Game State
           const [board, setBoard] = useState(Array(9).fill(null));
           const [isXNext, setIsXNext] = useState(true);
           const winner = calculateWinner(board);
 
-          // Memory Game State
           const [memoryCards, setMemoryCards] = useState([]);
           const [flipped, setFlipped] = useState([]);
           const [solved, setSolved] = useState([]);
 
+          const [tasbihCount, setTasbihCount] = useState(0);
+
           useEffect(() => {
-            // تحضير كروت الذاكرة
             const emojis = ["✂️", "🪒", "💈", "🧴", "🪞", "🧼", "🪥", "💅"];
             const deck = [...emojis, ...emojis].sort(() => Math.random() - 0.5).map((emoji, index) => ({ id: index, emoji }));
             setMemoryCards(deck);
@@ -170,7 +169,6 @@
             if (flipped.length === 2 || flipped.includes(index) || solved.includes(index)) return;
             const newFlipped = [...flipped, index];
             setFlipped(newFlipped);
-
             if (newFlipped.length === 2) {
               if (memoryCards[newFlipped[0]].emoji === memoryCards[newFlipped[1]].emoji) {
                 setSolved([...solved, ...newFlipped]);
@@ -288,61 +286,3 @@
                 {page === "islamic" && (
                    <>
                      <h2 className="section">القرآن والأذكار 🕌</h2>
-                     <div className="grid">
-                        <div className="card">
-                           <h3>مواقيت الصلاة (القاهرة)</h3>
-                           <iframe src="https://www.islamicfinder.org/prayer-widget/360630/1/1/18.0/31.0" style={{width:'100%', height: 250, border: 'none', borderRadius: 8}} title="Prayer Times"></iframe>
-                        </div>
-                        <div className="card">
-                           <h3>المصحف الإلكتروني</h3>
-                           <p className="muted">اضغط لقراءة القرآن الكريم كاملاً.</p>
-                           <a href="https://quran.com/ar" target="_blank" rel="noreferrer" style={{textDecoration:'none'}}><button className="primary" style={{width:'100%'}}>افتح المصحف الآن</button></a>
-                        </div>
-                        <div className="card">
-                           <h3>أذكار الصباح والمساء</h3>
-                           <p className="muted">حصن نفسك بالأذكار اليومية.</p>
-                           <a href="https://www.islamweb.net/ar/library/index.php?page=bookcontents&idfrom=409&idto=409&bk_no=36&ID=409" target="_blank" rel="noreferrer" style={{textDecoration:'none'}}><button className="secondary" style={{width:'100%'}}>اقرأ الأذكار</button></a>
-                        </div>
-                     </div>
-                   </>
-                )}
-
-                {page === "admin" && (
-                  <>
-                    <h2 className="section">لوحة الإدارة (كروكي مبدئي)</h2>
-                    <div className="grid">
-                      <div className="stat">إجمالي الحجوزات<strong>{bookings.length}</strong></div>
-                      <div className="stat">حجوزات مسبقة<strong>{bookings.filter(b => b.type === "حجز مسبق").length}</strong></div>
-                      <div className="stat">في الانتظار (أدوار)<strong>{bookings.filter(b => b.type === "دور الآن").length}</strong></div>
-                      <div className="stat">دخل الخزنة المتوقع<strong>{bookings.reduce((sum, b) => sum + b.price, 0)} ج.م</strong></div>
-                    </div>
-                    <p className="muted" style={{marginTop:20}}>
-                       * هذه الشاشة توضيحية. قريباً سيتم ربطها بقاعدة بيانات حقيقية (Firebase) لكي تظهر لك حجوزات جميع العملاء من أي جهاز، مع إمكانية تسجيل سحب الموظفين.
-                    </p>
-                  </>
-                )}
-              </main>
-
-              <footer>
-                <div className="social-icons">
-                  <a href="https://facebook.com" target="_blank" rel="noreferrer">📘 فيسبوك</a>
-                  <a href="https://instagram.com" target="_blank" rel="noreferrer">📸 انستجرام</a>
-                  <a href="https://wa.me/201000000000" target="_blank" rel="noreferrer">💬 واتساب</a>
-                </div>
-                بودي © 2026 — كل الحقوق محفوظة.
-              </footer>
-            </div>
-          );
-        }
-
-        function calculateWinner(squares) {
-          const lines = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
-          for (let i = 0; i < lines.length; i++) { const [a, b, c] = lines[i]; if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) { return squares[a]; } }
-          return null;
-        }
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>

@@ -7,41 +7,29 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <style>body { margin: 0; padding: 0; }</style>
-</head>
-<body>
-    <div id="root"></div>
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-
-        const services = [
-          { id: 1, name: "شعر ودقن", price: 130 },
-          { id: 2, name: "شعر بس", price: 100 },
-          { id: 3, name: "شعر ودقن واستشوار", price: 200 },
-          { id: 4, name: "شعر ودقن واستشوار + ماسك", price: 300 },
-          { id: 5, name: "عرض العريس", price: 1000 },
-          { id: 6, name: "عرض الروشنة", price: 500 },
-        ];
-        const branches = ["عين شمس", "المرج", "الدقي"];
-        const barbers = ["محمود", "نور", "عمر السيد", "عمر علاء", "مصطفى مشعل"];
-        const times = ["10:00 ص", "11:00 ص", "12:00 م", "1:00 م", "2:00 م", "3:00 م", "4:00 م", "5:00 م", "6:00 م"];
-        
-        const css = `
+    <style>
+        /* التنسيقات (CSS) بتاعتك */
         *{box-sizing:border-box}
         body{margin:0;font-family:Tahoma,Arial;background:#f3f5f9;color:#172338}
         button,input,select{font:inherit}
         button{cursor:pointer}
-        .app{direction:rtl;min-height:100vh;display:flex;flex-direction:column}
+        .app{direction:rtl;min-height:100vh; display: flex; flex-direction: column;}
         header{background:#142238;color:white;padding:20px 6%;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
         header h2{margin:0;color:#e8bb76;font-size:35px;font-weight:bold;}
         header small{color:#bbc5d5}
-        nav{display:flex;gap:8px;flex-wrap:wrap;padding:15px 6%;background:white;border-bottom:1px solid #ddd; justify-content:center;}
+        nav{display:flex;gap:8px;flex-wrap:wrap;padding:15px 6%;background:white;border-bottom:1px solid #ddd; justify-content: center;}
         nav button{border:0;border-radius:8px;padding:10px 14px;background:#edf0f5;color:#172338}
         nav button.active{background:#142238;color:white}
-        main{max-width:1100px;margin:auto;padding:25px 16px; flex:1; width:100%;}
+        main{max-width:1100px;margin:auto;padding:25px 16px; flex: 1; width: 100%;}
         .hero{background:linear-gradient(120deg,#142238,#344b68);color:white;padding:30px;border-radius:16px;margin-bottom:22px;}
         .hero h1{font-size:32px;margin:10px 0}
         .gold{color:#e8bb76}
+        .marquee-container { width: 100%; overflow: hidden; background: #a77835; color: white; padding: 10px 0; border-radius: 8px; margin-bottom: 20px;}
+        .marquee-content { display: inline-block; white-space: nowrap; animation: marquee 15s linear infinite; font-weight: bold; font-size: 18px;}
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #17663a; color: white; padding: 15px 30px; border-radius: 8px; font-size: 20px; font-weight: bold; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.3); animation: slideDown 0.5s ease-out; }
+        @keyframes slideDown { from { top: -100px; } to { top: 20px; } }
+        .toast.nabi { background: #d4af37; color: #142238; }
         .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:13px}
         .card,.panel{background:white;border:1px solid #e2e6ed;border-radius:12px;padding:17px;margin-bottom:13px}
         .card h3{margin:5px 0 10px}
@@ -64,40 +52,36 @@
         .game-board { display: grid; grid-template-columns: repeat(3, 100px); gap: 5px; justify-content: center; margin-top: 20px;}
         .square { width: 100px; height: 100px; background: #fff; border: 2px solid #142238; font-size: 50px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #142238;}
         .square:hover { background: #f0f0f0; }
-        
-        .splash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #142238; color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; transition: opacity 1s; }
-        .splash h1 { font-size: 70px; color: #e8bb76; margin-bottom: 20px; text-shadow: 0 0 10px rgba(232, 187, 118, 0.5);}
-        .splash p { font-size: 24px; font-weight: bold; }
-        
         .memory-grid { display: grid; grid-template-columns: repeat(4, 70px); gap: 10px; justify-content: center; margin-top: 20px;}
         .memory-card { width: 70px; height: 70px; background: #142238; color: white; font-size: 30px; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; }
         .memory-card.flipped { background: #e8bb76; color: #142238; }
-        
         .tasbih-btn { width: 150px; height: 150px; border-radius: 50%; background: #e8bb76; color: #142238; font-size: 40px; font-weight: bold; border: 5px solid #142238; margin: 20px auto; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); user-select: none;}
         .tasbih-btn:active { transform: scale(0.95); }
-        
         .azkar-text { line-height: 2; font-size: 18px; text-align: justify; background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px;}
         .azkar-text p { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed #ddd;}
         .azkar-text p:last-child { border-bottom: none; }
-        `;
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        // --- كودك بالكامل مع الإضافات ---
+        const { useState, useEffect } = React;
 
-        function SplashScreen({ onFinish }) {
-          useEffect(() => {
-            const timer = setTimeout(onFinish, 3000); 
-            return () => clearTimeout(timer);
-          }, [onFinish]);
-          return (
-            <div className="splash">
-              <h1>بودي ✂️</h1>
-              <p>أهلاً بعملاء بودي.. نتشرف بحضوركم!</p>
-            </div>
-          );
-        }
+        const services = [
+          { id: 1, name: "شعر ودقن", price: 130 },
+          { id: 2, name: "شعر بس", price: 100 },
+          { id: 3, name: "شعر ودقن واستشوار", price: 200 },
+          { id: 4, name: "شعر ودقن واستشوار + ماسك", price: 300 },
+          { id: 5, name: "عرض العريس", price: 1000 },
+          { id: 6, name: "عرض الروشنة", price: 500 },
+        ];
+        const branches = ["عين شمس", "المرج", "الدقي"];
+        const barbers = ["محمود", "نور", "عمر السيد", "عمر علاء", "مصطفى مشعل"];
+        const times = ["10:00 ص", "11:00 ص", "12:00 م", "1:00 م", "2:00 م", "3:00 م", "4:00 م", "5:00 م", "6:00 م"];
 
         function App() {
-          const [showSplash, setShowSplash] = useState(true);
-          const [page, setPage] = useState("home"); 
-          
+          const [page, setPage] = useState("home");
           const [bookings, setBookings] = useState(() => { try { return JSON.parse(localStorage.getItem("body_bookings") || "[]"); } catch { return []; } });
           const [branch, setBranch] = useState(branches[0]);
           const [barber, setBarber] = useState(barbers[0]);
@@ -107,18 +91,24 @@
           const [name, setName] = useState("");
           const [phone, setPhone] = useState("");
           const [message, setMessage] = useState("");
+          const [toastMessage, setToastMessage] = useState(null);
+          const [audioEnabled, setAudioEnabled] = useState(false);
           
+          // ألعاب
           const [board, setBoard] = useState(Array(9).fill(null));
           const [isXNext, setIsXNext] = useState(true);
           const winner = calculateWinner(board);
-          
+
           const [memoryCards, setMemoryCards] = useState([]);
           const [flipped, setFlipped] = useState([]);
           const [solved, setSolved] = useState([]);
 
+          // تسبيح وأذكار
           const [tasbihCount, setTasbihCount] = useState(0);
           const [currentZekr, setCurrentZekr] = useState("سبحان الله");
           const [showCelebration, setShowCelebration] = useState(false);
+
+          // إدارة
           const [adminPassword, setAdminPassword] = useState("");
           const [isAdminAuth, setIsAdminAuth] = useState(false);
 
@@ -129,17 +119,20 @@
           }, []);
 
           useEffect(() => { localStorage.setItem("body_bookings", JSON.stringify(bookings)); }, [bookings]);
+          
+          useEffect(() => {
+            const interval = setInterval(() => {
+              setToastMessage({ text: "صلي على النبي ﷺ ✨", type: "nabi" });
+              setTimeout(() => setToastMessage(null), 4000);
+            }, 180000); 
+            return () => clearInterval(interval);
+          }, []);
 
-          const zekrList = ["سبحان الله", "الحمد لله", "الله أكبر", "لا إله إلا الله", "صلى الله عليه وسلم", "أستغفر الله"];
-
-          const increaseTasbih = () => {
-            const newCount = tasbihCount + 1;
-            setTasbihCount(newCount);
-            if (newCount % 10 === 0) {
-              setShowCelebration(true);
-              setTimeout(() => setShowCelebration(false), 3000);
-            }
-          };
+          function playSound() {
+            if (!audioEnabled) return;
+            const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
+            audio.play().catch(e => console.log("Audio blocked"));
+          }
 
           function handleBooking(e, service) {
             e.preventDefault();
@@ -154,6 +147,11 @@
               const myTurn = 100 + currentQueue;
               newBooking = { id: Date.now(), name, phone, branch, barber, service: service.name, price: service.price, type: "دور الآن", turnNumber: myTurn, deposit: 0, status: "في الانتظار" };
               setMessage(`تم تسجيلك في الانتظار! رقم دورك هو: ${myTurn}`);
+              setTimeout(() => {
+                setToastMessage({ text: `دورك جه يا ${name}، اتفضل الكرسي رقم 1`, type: "turn" });
+                playSound();
+                setTimeout(() => setToastMessage(null), 8000);
+              }, 10000);
             }
             setBookings(old => [newBooking, ...old]); setName(""); setPhone(""); setPage("bookings");
           }
@@ -172,6 +170,17 @@
             }
           }
 
+          const zekrList = ["سبحان الله", "الحمد لله", "الله أكبر", "لا إله إلا الله", "صلى الله عليه وسلم", "أستغفر الله"];
+
+          const increaseTasbih = () => {
+            const newCount = tasbihCount + 1;
+            setTasbihCount(newCount);
+            if (newCount % 10 === 0) {
+              setShowCelebration(true);
+              setTimeout(() => setShowCelebration(false), 3000);
+            }
+          };
+
           const handleAdminLogin = (e) => {
             e.preventDefault();
             if (adminPassword === "1") {
@@ -184,38 +193,26 @@
           };
 
           const nav = [["home", "الرئيسية"], ["booking", "حجز جديد"], ["bookings", "الحجوزات"], ["games", "تسلية 🎮"], ["islamic", "قرآن وأذكار 🕌"], ["admin", "الإدارة"]];
-
-          if (showSplash) {
-            return <SplashScreen onFinish={() => setShowSplash(false)} />;
-          }
+          const totalVisits = bookings.length;
+          const visitsText = totalVisits >= 5 ? "مبروك! زيارتك السادسة مجانية بالكامل ✂️🎉" : `فاضلك ${5 - totalVisits} زيارات وتاخد السادسة مجاناً بكل حاجة! 🎁`;
 
           return (
             <div className="app">
-              <style>{css}</style>
+              {toastMessage && (<div className={`toast ${toastMessage.type}`}>{toastMessage.text}</div>)}
               <header>
                 <div><h2>بودي</h2><small>نظام صالونات الحلاقة الذكي</small></div>
                 <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                  {!audioEnabled && (<button className="primary" onClick={() => setAudioEnabled(true)} style={{ background: "#e74c3c", color: "white" }}>🔊 تفعيل الرنات</button>)}
                   <span>💈 احجز حلاقتك بسهولة</span>
                 </div>
               </header>
-              
-              <nav>
-                {nav.map(([id, title]) => (
-                  <button 
-                    key={id} 
-                    className={page === id || (page.startsWith("azkar") && id === "islamic") ? "active" : ""} 
-                    onClick={() => { setPage(id); setMessage(""); }}
-                  >
-                    {title}
-                  </button>
-                ))}
-              </nav>
-
+              <nav>{nav.map(([id, title]) => (<button key={id} className={page === id || (page.startsWith("azkar") && id === "islamic") ? "active" : ""} onClick={() => { setPage(id); setMessage(""); }}>{title}</button>))}</nav>
               <main>
                 {message && (<div className="success">{message}<button onClick={() => setMessage("")} style={{ float: "left", border: 0, background: "transparent" }}>✕</button></div>)}
                 
                 {page === "home" && (
                   <>
+                    <div className="marquee-container"><div className="marquee-content">🔥 خصم خاص على عرض العريس! | ✨ عرض الروشنة بـ 500 جنيه | 💈 استشوار مجاني مع الماسك</div></div>
                     <section className="hero">
                       <small className="gold">تجربة حلاقة مختلفة</small>
                       <h1>حلاقتك الجاية، <span className="gold">على مزاجك.</span></h1>
@@ -259,8 +256,8 @@
                   <>
                     <div className="hero" style={{ padding: 20, marginBottom: 20, textAlign: "center" }}>
                       <h2 style={{ margin: 0, color: "white" }}>برنامج الولاء 🎁</h2>
-                      <p style={{ fontSize: 20, fontWeight: "bold", margin: "10px 0 0 0" }}>{bookings.length >= 5 ? "مبروك! زيارتك السادسة مجانية بالكامل ✂️🎉" : `فاضلك ${5 - bookings.length} زيارات وتاخد السادسة مجاناً! 🎁`}</p>
-                      <small style={{ color: "#ccc" }}>عدد زياراتك: {bookings.length}</small>
+                      <p style={{ fontSize: 20, fontWeight: "bold", margin: "10px 0 0 0" }}>{visitsText}</p>
+                      <small style={{ color: "#ccc" }}>عدد زياراتك: {totalVisits}</small>
                     </div>
                     <h2 className="section">الحجوزات المسجلة</h2>
                     {bookings.length === 0 ? (<div className="panel">لا توجد حجوزات حتى الآن.</div>) : (bookings.map(b => (<div className="panel" key={b.id} style={{ borderRight: b.type === 'دور الآن' ? '5px solid #e8bb76' : '5px solid #142238' }}><div className="row"><h3>{b.name} — {b.service}</h3><span className="gold" style={{ fontWeight: "bold" }}>{b.type}</span></div><p>الفرع: {b.branch} | الحلاق: {b.barber}</p>{b.type === "حجز مسبق" ? (<p>الموعد: {b.date} — {b.time} (العربون: {b.deposit} جنيه)</p>) : (<p style={{ fontSize: 20, color: '#d35400' }}>رقم الدور: <b>{b.turnNumber}</b></p>)}<small className="muted">{b.status}</small></div>)))}
@@ -287,24 +284,3 @@
                                  <div key={i} className={`memory-card ${isFlipped ? 'flipped' : ''}`} onClick={() => handleMemoryClick(i)}>
                                    {isFlipped ? card.emoji : '?'}
                                  </div>
-                               );
-                            })}
-                          </div>
-                          <button className="secondary" style={{ marginTop: 20 }} onClick={() => { window.location.reload(); }}>إعادة اللعب</button>
-                        </div>
-                    </div>
-                  </>
-                )}
-
-                {page === "islamic" && (
-                   <>
-                     <h2 className="section">القرآن والأذكار 🕌</h2>
-                     <div className="grid">
-                        <div className="card" style={{display: 'flex', flexDirection: 'column', gap: 10}}>
-                           <button className="primary" style={{padding: 20, fontSize: 18}} onClick={() => setPage("azkar_morning")}>☀️ أذكار الصباح</button>
-                           <button className="secondary" style={{padding: 20, fontSize: 18}} onClick={() => setPage("azkar_evening")}>🌙 أذكار المساء</button>
-                        </div>
-
-                        <div className="card" style={{textAlign: "center"}}>
-                           <h3>ركن التسبيح 📿</h3>
-                           <div style={{marginBott

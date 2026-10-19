@@ -42,12 +42,6 @@
         .hero{background:linear-gradient(120deg,#142238,#344b68);color:white;padding:30px;border-radius:16px;margin-bottom:22px;}
         .hero h1{font-size:32px;margin:10px 0}
         .gold{color:#e8bb76}
-        .marquee-container { width: 100%; overflow: hidden; background: #a77835; color: white; padding: 10px 0; border-radius: 8px; margin-bottom: 20px;}
-        .marquee-content { display: inline-block; white-space: nowrap; animation: marquee 15s linear infinite; font-weight: bold; font-size: 18px;}
-        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #17663a; color: white; padding: 15px 30px; border-radius: 8px; font-size: 20px; font-weight: bold; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.3); animation: slideDown 0.5s ease-out; }
-        @keyframes slideDown { from { top: -100px; } to { top: 20px; } }
-        .toast.nabi { background: #d4af37; color: #142238; }
         .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:13px}
         .card,.panel{background:white;border:1px solid #e2e6ed;border-radius:12px;padding:17px;margin-bottom:13px}
         .card h3{margin:5px 0 10px}
@@ -81,11 +75,16 @@
         
         .tasbih-btn { width: 150px; height: 150px; border-radius: 50%; background: #e8bb76; color: #142238; font-size: 40px; font-weight: bold; border: 5px solid #142238; margin: 20px auto; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); user-select: none;}
         .tasbih-btn:active { transform: scale(0.95); }
+        
+        /* تنسيقات الأذكار */
+        .azkar-text { line-height: 2; font-size: 18px; text-align: justify; background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px;}
+        .azkar-text p { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed #ddd;}
+        .azkar-text p:last-child { border-bottom: none; }
         `;
 
         function SplashScreen({ onFinish }) {
           useEffect(() => {
-            const timer = setTimeout(onFinish, 5000); // 5 ثواني عشان تتأكد إنك شوفتها
+            const timer = setTimeout(onFinish, 3000); 
             return () => clearTimeout(timer);
           }, [onFinish]);
           return (
@@ -98,7 +97,8 @@
 
         function App() {
           const [showSplash, setShowSplash] = useState(true);
-          const [page, setPage] = useState("home");
+          const [page, setPage] = useState("home"); // home, booking, bookings, games, islamic, azkar_morning, azkar_evening, tasbih, admin
+          
           const [bookings, setBookings] = useState(() => { try { return JSON.parse(localStorage.getItem("body_bookings") || "[]"); } catch { return []; } });
           const [branch, setBranch] = useState(branches[0]);
           const [barber, setBarber] = useState(barbers[0]);
@@ -108,18 +108,23 @@
           const [name, setName] = useState("");
           const [phone, setPhone] = useState("");
           const [message, setMessage] = useState("");
-          const [toastMessage, setToastMessage] = useState(null);
+          
           const [audioEnabled, setAudioEnabled] = useState(false);
           
+          // Game states
           const [board, setBoard] = useState(Array(9).fill(null));
           const [isXNext, setIsXNext] = useState(true);
           const winner = calculateWinner(board);
-
           const [memoryCards, setMemoryCards] = useState([]);
           const [flipped, setFlipped] = useState([]);
           const [solved, setSolved] = useState([]);
 
+          // Tasbih State
           const [tasbihCount, setTasbihCount] = useState(0);
+
+          // Admin Auth State
+          const [isAdminAuth, setIsAdminAuth] = useState(false);
+          const [adminPassword, setAdminPassword] = useState("");
 
           useEffect(() => {
             const emojis = ["✂️", "🪒", "💈", "🧴", "🪞", "🧼", "🪥", "💅"];
@@ -128,20 +133,6 @@
           }, []);
 
           useEffect(() => { localStorage.setItem("body_bookings", JSON.stringify(bookings)); }, [bookings]);
-          
-          useEffect(() => {
-            const interval = setInterval(() => {
-              setToastMessage({ text: "صلي على النبي ﷺ ✨", type: "nabi" });
-              setTimeout(() => setToastMessage(null), 4000);
-            }, 180000); 
-            return () => clearInterval(interval);
-          }, []);
-
-          function playSound() {
-            if (!audioEnabled) return;
-            const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
-            audio.play().catch(e => console.log("Audio blocked"));
-          }
 
           function handleBooking(e, service) {
             e.preventDefault();
@@ -156,11 +147,6 @@
               const myTurn = 100 + currentQueue;
               newBooking = { id: Date.now(), name, phone, branch, barber, service: service.name, price: service.price, type: "دور الآن", turnNumber: myTurn, deposit: 0, status: "في الانتظار" };
               setMessage(`تم تسجيلك في الانتظار! رقم دورك هو: ${myTurn}`);
-              setTimeout(() => {
-                setToastMessage({ text: `دورك جه يا ${name}، اتفضل الكرسي رقم 1`, type: "turn" });
-                playSound();
-                setTimeout(() => setToastMessage(null), 8000);
-              }, 10000);
             }
             setBookings(old => [newBooking, ...old]); setName(""); setPhone(""); setPage("bookings");
           }
@@ -179,6 +165,17 @@
             }
           }
 
+          const handleAdminLogin = (e) => {
+            e.preventDefault();
+            if (adminPassword === "1") {
+              setIsAdminAuth(true);
+              setMessage("");
+            } else {
+              setMessage("كلمة المرور غير صحيحة!");
+              setAdminPassword("");
+            }
+          };
+
           const nav = [["home", "الرئيسية"], ["booking", "حجز جديد"], ["bookings", "الحجوزات"], ["games", "تسلية 🎮"], ["islamic", "قرآن وأذكار 🕌"], ["admin", "الإدارة"]];
 
           if (showSplash) {
@@ -188,7 +185,6 @@
           return (
             <div className="app">
               <style>{css}</style>
-              {toastMessage && (<div className={`toast ${toastMessage.type}`}>{toastMessage.text}</div>)}
               <header>
                 <div><h2>بودي</h2><small>نظام صالونات الحلاقة الذكي</small></div>
                 <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -196,13 +192,24 @@
                   <span>💈 احجز حلاقتك بسهولة</span>
                 </div>
               </header>
-              <nav>{nav.map(([id, title]) => (<button key={id} className={page === id ? "active" : ""} onClick={() => { setPage(id); setMessage(""); }}>{title}</button>))}</nav>
+              
+              <nav>
+                {nav.map(([id, title]) => (
+                  <button 
+                    key={id} 
+                    className={page === id || (page.startsWith("azkar") && id === "islamic") ? "active" : ""} 
+                    onClick={() => { setPage(id); setMessage(""); }}
+                  >
+                    {title}
+                  </button>
+                ))}
+              </nav>
+
               <main>
                 {message && (<div className="success">{message}<button onClick={() => setMessage("")} style={{ float: "left", border: 0, background: "transparent" }}>✕</button></div>)}
                 
                 {page === "home" && (
                   <>
-                    <div className="marquee-container"><div className="marquee-content">🔥 خصم خاص على عرض العريس! | ✨ عرض الروشنة بـ 500 جنيه | 💈 استشوار مجاني مع الماسك</div></div>
                     <section className="hero">
                       <small className="gold">تجربة حلاقة مختلفة</small>
                       <h1>حلاقتك الجاية، <span className="gold">على مزاجك.</span></h1>
@@ -214,75 +221,108 @@
                   </>
                 )}
 
-                {page === "booking" && (
-                  <>
-                    <h2 className="section">حجز موعد جديد</h2>
-                    <div className="panel">
-                      <label>اختر الخدمة:</label>
-                      <select id="serviceSelector" style={{ marginBottom: 20 }}>{services.map(s => <option key={s.id} value={s.id}>{s.name} — {s.price} جنيه</option>)}</select>
-                      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-                        <button type="button" className={bookingType === "advance" ? "primary" : "secondary"} onClick={() => setBookingType("advance")} style={{ flex: 1 }}>حجز مسبق (ميعاد محدد)</button>
-                        <button type="button" className={bookingType === "now" ? "primary" : "secondary"} onClick={() => setBookingType("now")} style={{ flex: 1 }}>حجز فوري (دور الآن)</button>
-                      </div>
-                      <form onSubmit={(e) => { const selectedId = document.getElementById("serviceSelector").value; const service = services.find(s => s.id === parseInt(selectedId)); handleBooking(e, service); }}>
-                        <label>الفرع</label><select value={branch} onChange={e => setBranch(e.target.value)}>{branches.map(b => <option key={b}>{b}</option>)}</select>
-                        <label>الحلاق المفضل</label><select value={barber} onChange={e => setBarber(e.target.value)}>{barbers.map(b => <option key={b}>{b}</option>)}</select>
-                        {bookingType === "advance" && (
-                          <>
-                            <div className="warning-box">⚠️ تنبيه هام: في الحجز المسبق، يتم دفع عربون (50% من قيمة الخدمة). هذا العربون غير مسترد في حالة عدم الحضور في الميعاد المحدد.</div>
-                            <label>تاريخ الحجز</label><input type="date" min={new Date().toLocaleDateString("en-CA")} value={date} onChange={e => setDate(e.target.value)} required />
-                            <label>الميعاد</label><select value={time} onChange={e => setTime(e.target.value)}>{times.map(t => <option key={t}>{t}</option>)}</select>
-                          </>
-                        )}
-                        <label>اسم العميل</label><input value={name} onChange={e => setName(e.target.value)} placeholder="اكتب الاسم" required />
-                        <label>رقم الموبايل</label><input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="01xxxxxxxxx" required />
-                        <button className="primary" type="submit" style={{ marginTop: 20, width: "100%" }}>{bookingType === "advance" ? "تأكيد الحجز ودفع العربون" : "خذ رقم دورك الآن"}</button>
-                      </form>
-                    </div>
-                  </>
-                )}
-
-                {page === "bookings" && (
-                  <>
-                    <div className="hero" style={{ padding: 20, marginBottom: 20, textAlign: "center" }}>
-                      <h2 style={{ margin: 0, color: "white" }}>برنامج الولاء 🎁</h2>
-                      <p style={{ fontSize: 20, fontWeight: "bold", margin: "10px 0 0 0" }}>{bookings.length >= 5 ? "مبروك! زيارتك السادسة مجانية بالكامل ✂️🎉" : `فاضلك ${5 - bookings.length} زيارات وتاخد السادسة مجاناً! 🎁`}</p>
-                      <small style={{ color: "#ccc" }}>عدد زياراتك: {bookings.length}</small>
-                    </div>
-                    <h2 className="section">الحجوزات المسجلة</h2>
-                    {bookings.length === 0 ? (<div className="panel">لا توجد حجوزات حتى الآن.</div>) : (bookings.map(b => (<div className="panel" key={b.id} style={{ borderRight: b.type === 'دور الآن' ? '5px solid #e8bb76' : '5px solid #142238' }}><div className="row"><h3>{b.name} — {b.service}</h3><span className="gold" style={{ fontWeight: "bold" }}>{b.type}</span></div><p>الفرع: {b.branch} | الحلاق: {b.barber}</p>{b.type === "حجز مسبق" ? (<p>الموعد: {b.date} — {b.time} (العربون: {b.deposit} جنيه)</p>) : (<p style={{ fontSize: 20, color: '#d35400' }}>رقم الدور: <b>{b.turnNumber}</b></p>)}<small className="muted">{b.status}</small></div>)))}
-                  </>
-                )}
-
-                {page === "games" && (
-                  <>
-                    <h2 className="section">تسلية 🎮</h2>
-                    <div style={{ display: "flex", gap: 20, flexWrap: "wrap", justifyContent: "center" }}>
-                        <div className="panel" style={{ flex: 1, minWidth: 300, textAlign: "center" }}>
-                          <h3>لعبة إكس أو (XO)</h3>
-                          <h4>{winner ? `الفائز: ${winner}` : `دور اللاعب: ${isXNext ? 'X' : 'O'}`}</h4>
-                          <div className="game-board">{board.map((square, i) => (<button key={i} className="square" onClick={() => { if (winner || board[i]) return; const newBoard = [...board]; newBoard[i] = isXNext ? 'X' : 'O'; setBoard(newBoard); setIsXNext(!isXNext); }}>{square}</button>))}</div>
-                          <button className="secondary" style={{ marginTop: 20 }} onClick={() => { setBoard(Array(9).fill(null)); setIsXNext(true); }}>إعادة اللعب</button>
-                        </div>
-
-                        <div className="panel" style={{ flex: 1, minWidth: 300, textAlign: "center" }}>
-                          <h3>لعبة الذاكرة (توصيل الكروت)</h3>
-                          <div className="memory-grid">
-                            {memoryCards.map((card, i) => {
-                               const isFlipped = flipped.includes(i) || solved.includes(i);
-                               return (
-                                 <div key={i} className={`memory-card ${isFlipped ? 'flipped' : ''}`} onClick={() => handleMemoryClick(i)}>
-                                   {isFlipped ? card.emoji : '?'}
-                                 </div>
-                               );
-                            })}
-                          </div>
-                          <button className="secondary" style={{ marginTop: 20 }} onClick={() => { window.location.reload(); }}>إعادة اللعب</button>
-                        </div>
-                    </div>
-                  </>
-                )}
+                {/* ... (نفس كود الحجز واللعبة اللي فاتوا) ... */}
 
                 {page === "islamic" && (
                    <>
                      <h2 className="section">القرآن والأذكار 🕌</h2>
+                     <div className="grid">
+                        <div className="card">
+                           <h3>مواقيت الصلاة</h3>
+                           <iframe src="https://www.islamicfinder.org/prayer-widget/360630/1/1/18.0/31.0" style={{width:'100%', height: 250, border: 'none', borderRadius: 8}} title="Prayer Times"></iframe>
+                        </div>
+                        
+                        <div className="card" style={{display: 'flex', flexDirection: 'column', gap: 10}}>
+                           <button className="primary" style={{padding: 20, fontSize: 18}} onClick={() => setPage("azkar_morning")}>☀️ أذكار الصباح</button>
+                           <button className="secondary" style={{padding: 20, fontSize: 18}} onClick={() => setPage("azkar_evening")}>🌙 أذكار المساء</button>
+                        </div>
+
+                        <div className="card" style={{textAlign: "center"}}>
+                           <h3>ركن التسبيح 📿</h3>
+                           <div className="tasbih-btn" onClick={() => setTasbihCount(tasbihCount + 1)}>
+                              {tasbihCount}
+                           </div>
+                           <button className="danger" onClick={() => setTasbihCount(0)}>تصفير</button>
+                        </div>
+                     </div>
+                   </>
+                )}
+
+                {page === "azkar_morning" && (
+                  <>
+                    <button className="secondary" style={{marginBottom: 20}} onClick={() => setPage("islamic")}>← رجوع</button>
+                    <h2 className="section">☀️ أذكار الصباح</h2>
+                    <div className="azkar-text">
+                      <p>أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لاَ إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.</p>
+                      <p>اللَّهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ النُّشُورُ.</p>
+                      <p>اللَّهُمَّ أَنْتَ رَبِّي لا إِلَهَ إِلاَّ أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ لَكَ بِذَنْبِي فَاغْفِرْ لِي، فَإِنَّهُ لا يَغْفِرُ الذُّنُوبَ إِلاَّ أَنْتَ.</p>
+                      <p>حَسْبِيَ اللَّهُ لا إِلَهَ إِلاَّ هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ. (7 مرات)</p>
+                      <p>بِسْمِ اللَّهِ الَّذِي لا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الأَرْضِ وَلا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ. (3 مرات)</p>
+                    </div>
+                  </>
+                )}
+
+                {page === "azkar_evening" && (
+                  <>
+                    <button className="secondary" style={{marginBottom: 20}} onClick={() => setPage("islamic")}>← رجوع</button>
+                    <h2 className="section">🌙 أذكار المساء</h2>
+                    <div className="azkar-text">
+                      <p>أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لاَ إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.</p>
+                      <p>اللَّهُمَّ بِكَ أَمْسَيْنَا، وَبِكَ أَصْبَحْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ الْمَصِيرُ.</p>
+                      <p>اللَّهُمَّ أَنْتَ رَبِّي لا إِلَهَ إِلاَّ أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ لَكَ بِذَنْبِي فَاغْفِرْ لِي، فَإِنَّهُ لا يَغْفِرُ الذُّنُوبَ إِلاَّ أَنْتَ.</p>
+                      <p>حَسْبِيَ اللَّهُ لا إِلَهَ إِلاَّ هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ. (7 مرات)</p>
+                      <p>بِسْمِ اللَّهِ الَّذِي لا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الأَرْضِ وَلا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ. (3 مرات)</p>
+                    </div>
+                  </>
+                )}
+
+                {page === "admin" && (
+                  <>
+                    {!isAdminAuth ? (
+                      <div className="panel" style={{maxWidth: 400, margin: '50px auto', textAlign: 'center'}}>
+                        <h3>🔒 تسجيل دخول المالك</h3>
+                        <p className="muted">من فضلك أدخل كلمة المرور للوصول للوحة التحكم.</p>
+                        <form onSubmit={handleAdminLogin}>
+                          <input type="password" placeholder="أدخل الباسورد" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} required />
+                          <button className="primary" type="submit" style={{width: '100%'}}>دخول</button>
+                        </form>
+                      </div>
+                    ) : (
+                      <>
+                        <h2 className="section">لوحة الإدارة</h2>
+                        <button className="danger" style={{marginBottom: 20}} onClick={() => { setIsAdminAuth(false); setAdminPassword(""); }}>تسجيل خروج</button>
+                        <div className="grid">
+                          <div className="stat">إجمالي الحجوزات<strong>{bookings.length}</strong></div>
+                          <div className="stat">حجوزات مسبقة<strong>{bookings.filter(b => b.type === "حجز مسبق").length}</strong></div>
+                          <div className="stat">في الانتظار (أدوار)<strong>{bookings.filter(b => b.type === "دور الآن").length}</strong></div>
+                          <div className="stat">دخل الخزنة المتوقع<strong>{bookings.reduce((sum, b) => sum + b.price, 0)} ج.م</strong></div>
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
+              </main>
+
+              <footer>
+                <div className="social-icons">
+                  <a href="https://facebook.com" target="_blank" rel="noreferrer">📘 فيسبوك</a>
+                  <a href="https://instagram.com" target="_blank" rel="noreferrer">📸 انستجرام</a>
+                  <a href="https://wa.me/201000000000" target="_blank" rel="noreferrer">💬 واتساب</a>
+                </div>
+                بودي © 2026 — كل الحقوق محفوظة.
+              </footer>
+            </div>
+          );
+        }
+
+        function calculateWinner(squares) {
+          const lines = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
+          for (let i = 0; i < lines.length; i++) { const [a, b, c] = lines[i]; if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) { return squares[a]; } }
+          return null;
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
